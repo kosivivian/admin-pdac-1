@@ -402,8 +402,8 @@ Dashboard!A2:B  -> Metric, Value pairs. Expected labels: "Current
                     "Highest Streak", "Streak Holder", "Last Updated"
 Log!A2:B        -> Day, Total Submissions (rows appended in order —
                     the LAST row is treated as today)
-Error!A2:F      -> Timestamp, Date, Workflow URL, Node Error Message,
-                    Auto Resolved? (Yes/No), Resolution Notes
+Error!A2:H      -> Timestamp, Date, Workflow, URL, Node, Error message,
+                    Resolved? (TRUE/FALSE), Resolution Notes
 Daily Automation KPIs!A2:J -> Date, Morning Post (Success/Failed),
                     Reminder 1-4 (Success/Failed), Success %,
                     Message Sent, Errors, Avg Runtime Metric
@@ -500,10 +500,14 @@ async function getCallouts() {
 }
 
 async function getAlerts() {
-  const rows = await fetchRange("automation", "Error!A2:F");
+  const rows = await fetchRange("automation", "Error!A2:H");
   return rows
-    .filter(r => (r[4] || "").trim().toLowerCase() !== "yes")
-    .map(r => ({ message: r[3], timestamp: r[0] }));
+    .filter(r => {
+      const resolved = r[6];
+      const isResolved = resolved === true || (typeof resolved === "string" && resolved.trim().toUpperCase() === "TRUE");
+      return !isResolved;
+    })
+    .map(r => ({ message: r[5], timestamp: r[0] }));
 }
 
 // Book/Video posting collapses into one "Morning Post" status, since
