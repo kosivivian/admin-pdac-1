@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDAC 2026 Summer Bootcamp — Demo Dashboard</title>
+<title>Summer Bootcamp Demo Dashboard</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -280,7 +280,7 @@
 <div class="wrap">
 
   <div class="page-header">
-    <h1>PDAC 2026 Summer Bootcamp — Demo Dashboard</h1>
+    <h1>Summer Bootcamp — Demo Dashboard</h1>
     <p>Program health at a glance · prepared for demonstration</p>
   </div>
 
@@ -541,7 +541,7 @@ async function getAutomationStatus() {
     morningPosted: today[1] === "Success",
     whatsappSentToday: Number(today[7]) || 0,
     remindersSent: reminders.filter(r => r === "Success").length,
-    leaderboardUrl: "https://kosivivian.github.io/pdac/" // static config, not sheet-driven
+    leaderboardUrl: "#"
   };
 }
 
