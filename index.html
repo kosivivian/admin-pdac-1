@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDAC 2026 Summer Bootcamp — Admin Dashboard</title>
+<title>PDAC 2026 Summer Bootcamp — Demo Dashboard</title>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -38,6 +38,21 @@
   .page-header{margin-bottom:24px;}
   .page-header h1{font-size:20px;margin:0 0 4px;font-weight:700;letter-spacing:-.01em;}
   .page-header p{margin:0;font-size:13px;color:var(--muted);}
+  .demo-notice{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--warn-soft);
+    border:1px solid #f1d29f;
+    border-left:4px solid var(--warn);
+    border-radius:var(--radius);
+    color:#7a4b09;
+    font-size:12px;
+    line-height:1.5;
+    padding:11px 14px;
+    margin:0 0 24px;
+  }
+  .demo-notice strong{font-weight:700;}
 
   .section-label{
     font-size:11px;
@@ -265,8 +280,13 @@
 <div class="wrap">
 
   <div class="page-header">
-    <h1>PDAC 2026 Summer Bootcamp — Admin Dashboard</h1>
-    <p>Program health at a glance · data synced from Google Sheets <span id="last-updated"></span></p>
+    <h1>PDAC 2026 Summer Bootcamp — Demo Dashboard</h1>
+    <p>Program health at a glance · prepared for demonstration</p>
+  </div>
+
+  <div class="demo-notice" role="note" aria-label="Demo data disclaimer">
+    <strong>Demo only:</strong>
+    <span>This dashboard uses dummy data for demonstration purposes. It does not contain or display company data.</span>
   </div>
 
   <!-- 1. HERO METRICS ROW -->
@@ -281,7 +301,7 @@
       <div class="card">
         <div class="card-head">
           <h2>Top 10 Leaderboard</h2>
-          <span class="tag">live from Sheet</span>
+          <span class="tag">demo data</span>
         </div>
         <div class="card-body">
 
@@ -345,39 +365,37 @@
 
 <script>
 /* ============================================================
-   DATA LAYER
-   Every getter fetches through the Cloudflare Worker proxy, which
-   holds the two spreadsheet IDs + the Sheets API key as secrets —
-   neither ever ships to the browser. See worker.js for the proxy
-   and the "SHEET CONTRACT" block below for the exact tab/column
-   layout each getter assumes. If a tab's headers or column order
-   change, update the matching getter here to match.
-
-   Two source spreadsheets, selected via the `sheet` param:
-     "bootcamp"   Dummy Summer Bootcamp Student Submission
-                    tabs: Students, Dashboard, Log
-     "automation" [PDAC] Daily posting Automation n8n sheet
-                    tabs: Workflow Logs, Error, Daily Automation KPIs,
-                          Metric, Message Delivery Log
+   DEMO DATA LAYER
+   This public demo intentionally uses only fictional, local data. It
+   does not request the Cloudflare Worker or any external spreadsheet.
    ============================================================ */
 
-// Set this after deploying the Worker (Settings -> Domains & Routes,
-// or the *.workers.dev URL shown on the Worker's overview page).
-const WORKER_URL = "https://pdac-sheets-proxy.nebolisako.workers.dev";
+const DEMO_RANGES = {
+  "bootcamp:Dashboard!A2:B": [
+    ["Current Bootcamp Day", "18"], ["Days Left", "12"],
+    ["Total Students", "42"], ["Highest Streak", "14"],
+    ["Streak Holder", "Amina Okafor"], ["Last Updated", "Demo snapshot"]
+  ],
+  "bootcamp:Students!A2:G": [
+    [1, "Amina Okafor", 18, 18, 14, "2026-06-18", "100"],
+    [2, "Daniel Mensah", 17, 17, 11, "2026-06-18", "94"],
+    [3, "Sofia Bennett", 16, 16, 10, "2026-06-17", "89"],
+    [4, "Noah Williams", 15, 15, 9, "2026-06-18", "83"],
+    [5, "Zainab Bello", 14, 14, 8, "2026-06-16", "78"],
+    [6, "Maya Thompson", 13, 13, 7, "2026-06-18", "72"],
+    [7, "Ethan Clark", 12, 12, 6, "2026-06-15", "67"],
+    [8, "Grace Adeyemi", 11, 11, 5, "2026-06-17", "61"],
+    [9, "Leo Martin", 10, 10, 4, "2026-06-14", "56"],
+    [10, "Ivy Okoro", 8, 8, 3, "2026-06-12", "44"]
+  ],
+  "bootcamp:Log!A2:B": [["2026-06-16", 36], ["2026-06-17", 39], ["2026-06-18", 38]],
+  "automation:Error!A2:H": [["2026-06-18 08:04", "2026-06-18", "Demo reminder", "", "", "Example alert for demo", false, ""]],
+  "automation:Daily Automation KPIs!A2:J": [["2026-06-18", "Success", "Success", "Success", "Success", "Success", 98, 38, 1, 2.4]],
+  "automation:Metric!A2:D": [["Time spent posting", 10, 2, 8], ["Messages sent successfully", 100, 98, 98]]
+};
 
-// Fetches one A1-notation range from one of the two spreadsheets via
-// the Worker. Returns [] (not a throw) on failure so one bad range
-// only blanks its own card instead of the whole page.
-async function fetchRange(sheet, range) {
-  try {
-    const url = `${WORKER_URL}/?sheet=${sheet}&range=${encodeURIComponent(range)}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    return data.values || [];
-  } catch (err) {
-    console.error(`fetchRange(${sheet}, ${range}) failed:`, err);
-    return [];
-  }
+function fetchRange(sheet, range) {
+  return Promise.resolve(DEMO_RANGES[`${sheet}:${range}`] || []);
 }
 
 // Turns Dashboard!A2:B rows ([Metric, Value] pairs) into a
@@ -608,11 +626,6 @@ function renderCallouts(c) {
   `;
 }
 
-function renderLastUpdated(text) {
-  const el = document.getElementById("last-updated");
-  el.textContent = text ? `· as of ${text}` : "";
-}
-
 function renderAlerts(alerts) {
   const el = document.getElementById("alert-list");
   if (!alerts || alerts.length === 0) {
@@ -665,7 +678,7 @@ function renderKPIs(kpis) {
    ============================================================ */
 
 async function init() {
-  getHeroMetrics().then(m => { renderHeroMetrics(m); renderLastUpdated(m.lastUpdated); });
+  getHeroMetrics().then(renderHeroMetrics);
   getEngagementStats().then(renderEngagementStats);
   getLeaderboard().then(renderLeaderboard);
   getCallouts().then(renderCallouts);
